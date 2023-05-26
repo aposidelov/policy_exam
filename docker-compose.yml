@@ -1,0 +1,48 @@
+version: '3.5'
+services:
+  php:
+    container_name: "${PROJECT_NAME}_php"
+    build:
+      context: .
+    volumes:
+      - .:/var/www/html:cached
+    networks:
+      - symfony_example_1
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql:8
+    container_name: "${PROJECT_NAME}_mysql"
+    environment:
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+    ports:
+      - "3306:3306"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 20000
+        hard: 40000
+    volumes:
+      - database_data:/var/lib/mysql:rw
+    networks:
+      - symfony_example_1
+  nginx:
+    image: nginx:latest
+    container_name: "${PROJECT_NAME}_nginx"
+    volumes:
+      - './docker/nginx/conf.d:/etc/nginx/conf.d'
+      - .:/var/www/html:cached
+    ports:
+      - 80:80
+    networks:
+      - symfony_example_1
+    depends_on:
+      - php
+      - mysql
+networks:
+  symfony_example_1:
+volumes:
+  database_data:
